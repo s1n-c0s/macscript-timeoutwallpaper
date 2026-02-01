@@ -1,0 +1,1 @@
+# macscript-timeoutwallpaper
