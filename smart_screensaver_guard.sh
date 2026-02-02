@@ -27,22 +27,27 @@ get_idle() {
 
 STATE="WORKING"
 LAST_IDLE=0
+IDLE_START_TIME=0
 
-log "Started - Kill ALL legacyScreenSaver"
-notify "🖥️ Guard Active" "Monitoring legacyScreenSaver" "Hero"
+# STARTUP notification
+log "Started"
+notify "🖥️ Screen Saver Guard" "Monitoring started" "Hero"
 
 while :; do
     IDLE_SEC=$(get_idle)
+    CURRENT_TIME=$(date +%s)
     
     case "$STATE" in
         
         "WORKING")
             if (( IDLE_SEC >= 5 )); then
                 STATE="IDLE"
+                IDLE_START_TIME=$CURRENT_TIME
                 log "State: WORKING → IDLE"
-                LAST_IDLE=$IDLE_SEC
+                # IDLE notification - screensaver starting
+                notify "💤 Screensaver" "Started monitoring (idle ${IDLE_SEC}s)" "Submarine"
             else
-                sleep 1800
+                sleep 300  # 5 min deep sleep
             fi
             ;;
             
@@ -52,21 +57,25 @@ while :; do
                 log "State: IDLE → RETURNED"
                 continue
             fi
+            
+            # Safety timeout after 2 hours idle
+            if (( CURRENT_TIME - IDLE_START_TIME > 7200 )); then
+                log "Idle timeout, returning to WORKING"
+                STATE="WORKING"
+                LAST_IDLE=0
+                continue
+            fi
+            
             LAST_IDLE=$IDLE_SEC
             sleep 5
             ;;
             
         "RETURNED")
-            log "User returned! Checking..."
-            notify "👤 User Active" "Checking legacyScreenSaver..." "Pop"
-            STATE="CHECK"
-            continue
-            ;;
+            log "User returned from screensaver"
+            # NO "User Active" notification here - only notify if killing
             
-        "CHECK")
             KILL_COUNT=0
             
-            # Find and kill ALL legacyScreenSaver processes
             while IFS= read -r line; do
                 [[ -z "$line" ]] && continue
                 
@@ -78,34 +87,38 @@ while :; do
                 [[ -z "$CPU_INT" ]] && CPU_INT=0
                 RSS_MB=$((RSS / 1024))
                 
-                # Kill if CPU > 1% OR MEM > 3MB
                 if [[ "$CPU_INT" -gt "$CPU_THRESHOLD" ]] || [[ "$RSS_MB" -gt "$MEM_THRESHOLD_MB" ]]; then
                     ((KILL_COUNT++))
                     
-                    log "KILL #$KILL_COUNT: legacyScreenSaver (PID:$PID, CPU:${CPU_INT}%, MEM:${RSS_MB}MB)"
+                    if (( KILL_COUNT == 1 )); then
+                        notify "👤 User Returned" "Screensaver stuck - killing..." "Basso"
+                    fi
+                    
+                    log "KILL: legacyScreenSaver (PID:$PID, CPU:${CPU_INT}%, MEM:${RSS_MB}MB)"
+                    notify "🛡️ Terminating" "legacyScreenSaver ${CPU_INT}%/${RSS_MB}MB" "Sosumi"
                     
                     if kill -15 "$PID" 2>/dev/null; then
                         sleep 2
                         if kill -0 "$PID" 2>/dev/null; then
                             kill -9 "$PID" 2>/dev/null
-                            log "Force killed PID:$PID"
+                            notify "⚡ Force Kill" "legacyScreenSaver killed" "Sosumi"
                         else
-                            log "Graceful kill PID:$PID"
+                            notify "✅ Success" "legacyScreenSaver exited cleanly" "Purr"
                         fi
                     fi
                 fi
             done < <(ps aux | grep -i "[l]egacyScreenSaver" | grep -v grep)
             
-            if (( KILL_COUNT > 0 )); then
-                log "Killed $KILL_COUNT legacyScreenSaver process(es)"
-                notify "🛡️ Complete" "Killed $KILL_COUNT process(es)" "Hero"
+            if (( KILL_COUNT == 0 )); then
+                log "Screensaver exited normally"
             else
-                log "All clear"
+                log "Killed $KILL_COUNT process(es)"
             fi
             
             STATE="WORKING"
-            log "State: CHECK → WORKING"
+            log "State: RETURNED → WORKING"
             LAST_IDLE=0
+            sleep 2
             ;;
             
     esac
