@@ -44,17 +44,41 @@ chmod +x ~/smart_screensaver_guard.sh
 
 Create `~/Library/LaunchAgents/com.smart.screensaver.plist`:
 
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.smart.screensaver</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/YOUR_USERNAME/smart_screensaver_guard.sh</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
+    <key>Nice</key>
+    <integer>10</integer>
+</dict>
+</plist>
+```
+
 **Replace `YOUR_USERNAME` with your actual Mac username.**
 
 ### 3. Start the Service
 
-\`\`\`bash
+```
 # Set permissions
 chmod 644 ~/Library/LaunchAgents/com.smart.screensaver.plist
 
 # Start now and enable auto-start on login
 launchctl load ~/Library/LaunchAgents/com.smart.screensaver.plist
-\`\`\`
+```
 
 ## Configuration
 
