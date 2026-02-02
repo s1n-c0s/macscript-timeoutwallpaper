@@ -5,108 +5,60 @@ readonly MEM_THRESHOLD_MB=3
 readonly LOG_FILE="$HOME/Library/Logs/screensaver_smart.log"
 readonly LOCK_FILE="/tmp/smart_screensaver_guard.lock"
 
-if [[ -f "$LOCK_FILE" ]] && kill -0 "$(cat "$LOCK_FILE" 2>/dev/null)" 2>/dev/null; then
-    exit 0
-fi
+# Single-instance guard
+[[ -f "$LOCK_FILE" ]] && kill -0 "$(<"$LOCK_FILE")" 2>/dev/null && exit
 echo $$ > "$LOCK_FILE"
 trap 'rm -f "$LOCK_FILE"' EXIT INT TERM
 
-notify() {
-    osascript -e "display notification \"$2\" with title \"$1\" sound name \"$3\"" &>/dev/null &
-}
+# Utilities
+notify() { osascript -e "display notification \"$2\" with title \"$1\" sound name \"$3\"" &>/dev/null & }
+log() { printf '[%(%H:%M:%S)T] %s\n' -1 "$*" >> "$LOG_FILE"; }
+idle_time() { ioreg -c IOHIDSystem -r 2>/dev/null | awk '/HIDIdleTime/{print int($NF/1000000000)}'; }
 
-log() {
-    printf '[%(%H:%M:%S)T] %s\n' -1 "$1" >> "$LOG_FILE"
-}
-
-get_idle() {
-    local idle
-    idle=$(ioreg -c IOHIDSystem -r 2>/dev/null | awk '/HIDIdleTime/{gsub(/[^0-9]/,"",$NF); print int($NF/1000000000); exit}')
-    echo "${idle:-0}"
-}
-
-STATE="WORKING"
-LAST_IDLE=0
-
-log "Started - Kill ALL legacyScreenSaver"
-notify "🖥️ Guard Active" "Monitoring legacyScreenSaver" "Hero"
-
-while :; do
-    IDLE_SEC=$(get_idle)
-    
-    case "$STATE" in
+# Actions
+kill_screensaver() {
+    local count=0 pid cpu rss
+    while read -r pid cpu rss; do
+        [[ -z "$pid" ]] && continue
+        rss=$((rss/1024)); cpu=${cpu%.*}
+        (( cpu > CPU_THRESHOLD || rss > MEM_THRESHOLD_MB )) || continue
         
-        "WORKING")
-            if (( IDLE_SEC >= 5 )); then
-                STATE="IDLE"
-                log "State: WORKING → IDLE"
-                LAST_IDLE=$IDLE_SEC
-            else
-                sleep 1800
-            fi
-            ;;
-            
-        "IDLE")
-            if (( IDLE_SEC < 5 )) && (( LAST_IDLE >= 5 )); then
-                STATE="RETURNED"
-                log "State: IDLE → RETURNED"
-                continue
-            fi
-            LAST_IDLE=$IDLE_SEC
-            sleep 5
-            ;;
-            
-        "RETURNED")
-            log "User returned! Checking..."
-            notify "👤 User Active" "Checking legacyScreenSaver..." "Pop"
-            STATE="CHECK"
-            continue
-            ;;
-            
-        "CHECK")
-            KILL_COUNT=0
-            
-            # Find and kill ALL legacyScreenSaver processes
-            while IFS= read -r line; do
-                [[ -z "$line" ]] && continue
-                
-                PID=$(echo "$line" | awk '{print $2}')
-                CPU=$(echo "$line" | awk '{print $3}')
-                RSS=$(echo "$line" | awk '{print $6}')
-                
-                CPU_INT=${CPU%.*}
-                [[ -z "$CPU_INT" ]] && CPU_INT=0
-                RSS_MB=$((RSS / 1024))
-                
-                # Kill if CPU > 1% OR MEM > 3MB
-                if [[ "$CPU_INT" -gt "$CPU_THRESHOLD" ]] || [[ "$RSS_MB" -gt "$MEM_THRESHOLD_MB" ]]; then
-                    ((KILL_COUNT++))
-                    
-                    log "KILL #$KILL_COUNT: legacyScreenSaver (PID:$PID, CPU:${CPU_INT}%, MEM:${RSS_MB}MB)"
-                    
-                    if kill -15 "$PID" 2>/dev/null; then
-                        sleep 2
-                        if kill -0 "$PID" 2>/dev/null; then
-                            kill -9 "$PID" 2>/dev/null
-                            log "Force killed PID:$PID"
-                        else
-                            log "Graceful kill PID:$PID"
-                        fi
-                    fi
-                fi
-            done < <(ps aux | grep -i "[l]egacyScreenSaver" | grep -v grep)
-            
-            if (( KILL_COUNT > 0 )); then
-                log "Killed $KILL_COUNT legacyScreenSaver process(es)"
-                notify "🛡️ Complete" "Killed $KILL_COUNT process(es)" "Hero"
-            else
-                log "All clear"
-            fi
-            
-            STATE="WORKING"
-            log "State: CHECK → WORKING"
-            LAST_IDLE=0
-            ;;
-            
-    esac
+        ((count++)) || notify "👤 User Returned" "Screensaver stuck - killing..." "Basso"
+        log "KILL: legacyScreenSaver (PID:$pid, CPU:${cpu}%, MEM:${rss}MB)"
+        notify "🛡️ Terminating" "legacyScreenSaver ${cpu}%/${rss}MB" "Sosumi"
+        
+        if kill -15 "$pid" 2>/dev/null; then
+            sleep 2
+            { kill -0 "$pid" 2>/dev/null && kill -9 "$pid" && notify "⚡ Force Kill" "legacyScreenSaver killed" "Sosumi"; } ||
+            notify "✅ Success" "legacyScreenSaver exited cleanly" "Purr"
+        fi
+    done < <(ps aux | awk '/[l]egacyScreenSaver/{print $2,$3,$6}')
+    (( count )) && log "Killed $count process(es)" || log "Screensaver exited normally"
+}
+
+# Main loop
+log "Started"
+notify "🖥️ Screen Saver Guard" "Monitoring started" "Hero"
+
+idle_start=0
+while :; do
+    idle=$(idle_time)
+    now=$(date +%s)
+    
+    if (( idle < 5 )); then
+        # Active
+        if (( idle_start )); then
+            kill_screensaver
+            idle_start=0
+            sleep 2
+        else
+            sleep 300  # Deep sleep while working
+        fi
+        
+    else
+        # Idle
+        (( idle_start )) || { idle_start=$now; log "State: WORKING → IDLE"; }
+        (( now - idle_start > 7200 )) && { log "Idle timeout"; idle_start=0; }  # 2h safety
+        sleep 5
+    fi
 done
