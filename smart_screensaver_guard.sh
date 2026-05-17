@@ -19,7 +19,7 @@ notify() {
 }
 
 log() {
-    printf '[%(%H:%M:%S)T] %s\n' -1 "$*" >> "$LOG_FILE"
+    echo "[$(date '+%H:%M:%S')] $*" >> "$LOG_FILE"
 }
 
 get_idle_time() {
