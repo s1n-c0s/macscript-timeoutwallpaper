@@ -45,7 +45,7 @@ while :; do
                 IDLE_START_TIME=$CURRENT_TIME
                 log "State: WORKING → IDLE"
                 # IDLE notification - screensaver starting
-                notify "💤 Screensaver" "Started monitoring (idle ${IDLE_SEC}s)" "Submarine"
+                # notify "💤 Screensaver" "Started monitoring (idle ${IDLE_SEC}s)" "Submarine"
             else
                 sleep 300  # 5 min deep sleep
             fi
