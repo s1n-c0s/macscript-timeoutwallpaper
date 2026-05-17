@@ -27,17 +27,6 @@ repeat
             do shell script "open 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'"
         end if
         
-    else if userAction contains "Install" then
-        try
-            do shell script "chmod +x '" & scriptDir & "install.sh'"
-            set installLog to do shell script "'" & scriptDir & "install.sh'"
-            display dialog "Installation Successful!
-            
-" & installLog with title "Success" buttons {"OK"} default button "OK"
-        on error errMsg
-            display dialog "Installation Failed: " & errMsg with title "Error" buttons {"OK"} default button "OK"
-        end try
-        
     else if userAction contains "Uninstall" then
         try
             do shell script "chmod +x '" & scriptDir & "uninstall.sh'"
@@ -47,6 +36,17 @@ repeat
 " & uninstallLog with title "Success" buttons {"OK"} default button "OK"
         on error errMsg
             display dialog "Uninstallation Failed: " & errMsg with title "Error" buttons {"OK"} default button "OK"
+        end try
+        
+    else if userAction contains "Install" then
+        try
+            do shell script "chmod +x '" & scriptDir & "install.sh'"
+            set installLog to do shell script "'" & scriptDir & "install.sh'"
+            display dialog "Installation Successful!
+            
+" & installLog with title "Success" buttons {"OK"} default button "OK"
+        on error errMsg
+            display dialog "Installation Failed: " & errMsg with title "Error" buttons {"OK"} default button "OK"
         end try
     end if
 end repeat
