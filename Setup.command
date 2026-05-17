@@ -5,6 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Run the GUI using osascript with the directory passed in
 osascript <<EOF
+activate
 set appName to "Smart Screensaver Guard"
 set scriptDir to "$DIR/"
 
