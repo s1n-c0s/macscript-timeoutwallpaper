@@ -10,9 +10,12 @@ set scriptDir to "$DIR/"
 
 repeat
     try
-        set userAction to button returned of (display dialog "Welcome to " & appName & " Setup" with title appName buttons {"Check Access", "Install", "Uninstall"} default button "Install" cancel button "Uninstall")
+        set userAction to button returned of (display alert "Welcome to " & appName & " Setup" message "Choose an action:" buttons {"Install", "Check Access", "Uninstall", "Exit"})
         
-        if userAction is "Check Access" then
+        if userAction is "Exit" then
+            exit repeat
+            
+        else if userAction is "Check Access" then
             display dialog "Please ensure Terminal/Script Editor has 'Accessibility' access in System Settings > Privacy & Security." with title "Access Check" buttons {"Open Settings", "Done"} default button "Done"
             if button returned of result is "Open Settings" then
                 do shell script "open 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'"
