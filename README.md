@@ -33,9 +33,8 @@ WORKING (deep sleep) → IDLE (watching) → RETURNED (detected) → CHECK (kill
 
 ### 1. Easy Setup (GUI)
 
-Simply **double-click** the `Setup.command` file in the folder. This opens a single-screen control panel where you can:
+Simply **double-click** the `Setup.command` file in the folder. The control panel will immediately show the current status (**🟢 Running** or **🔴 Stopped**) and allow you to:
 
-- **🔍 Check Status**: Instantly see if the background service is running.
 - **🛠 Check Access**: Guides you through granting the necessary **Accessibility** permissions.
 - **🚀 Install Service**: Sets up the guard to run automatically in the background.
 - **🗑 Uninstall Service**: Completely removes the service and associated files.

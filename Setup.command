@@ -9,10 +9,23 @@ activate
 set appName to "Smart Screensaver Guard"
 set scriptDir to "$DIR/"
 
-set choices to {"🔍 Check Status", "🛠 Check Access (Permissions)", "🚀 Install Service", "🗑 Uninstall Service"}
+set choices to {"🛠 Check Access (Permissions)", "🚀 Install Service", "🗑 Uninstall Service"}
 
 repeat
-    set selected to choose from list choices with title appName with prompt "One-Click Setup:" OK button name "Select" cancel button name "Exit"
+    try
+        set isRunning to do shell script "launchctl list | grep com.user.smartscreensaverguard || echo 'false'"
+        if isRunning contains "false" then
+            set statusMsg to "Status: 🔴 Stopped"
+        else
+            set statusMsg to "Status: 🟢 Running"
+        end if
+    on error
+        set statusMsg to "Status: 🔴 Not Installed"
+    end try
+
+    set selected to choose from list choices with title appName with prompt statusMsg & "
+
+One-Click Setup:" OK button name "Select" cancel button name "Exit"
     
     if selected is false then
         -- User clicked Exit
@@ -21,23 +34,7 @@ repeat
     
     set userAction to item 1 of selected
     
-    if userAction contains "Check Status" then
-        try
-            set isRunning to do shell script "launchctl list | grep com.user.smartscreensaverguard || echo 'false'"
-            if isRunning contains "false" then
-                display dialog "Status: 🔴 Stopped
-                
-The background service is NOT running." with title "Service Status" buttons {"OK"} default button "OK"
-            else
-                display dialog "Status: 🟢 Running
-                
-The background service is active and monitoring." with title "Service Status" buttons {"OK"} default button "OK"
-            end if
-        on error
-            display dialog "Status: 🔴 Not Installed" with title "Service Status" buttons {"OK"} default button "OK"
-        end try
-        
-    else if userAction contains "Check Access" then
+    if userAction contains "Check Access" then
         display dialog "Please ensure Terminal/Script Editor has 'Accessibility' access in System Settings > Privacy & Security." with title "Access Check" buttons {"Open Settings", "Done"} default button "Done"
         if button returned of result is "Open Settings" then
             do shell script "open 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'"
