@@ -33,16 +33,16 @@ WORKING (deep sleep) → IDLE (watching) → RETURNED (detected) → CHECK (kill
 
 ### 1. Easy Install
 
-Clone this repository and run the installation script:
+Simply **double-click** the `Install.command` file in the folder.
 
+Alternatively, via Terminal:
 ```bash
 # Clone the repository
 git clone https://github.com/TNK-T/macscript-timeoutwallpaper.git
 cd macscript-timeoutwallpaper
 
 # Run installer
-chmod +x install.sh
-./install.sh
+./Install.command
 ```
 
 ### 2. Verification
@@ -59,11 +59,11 @@ tail -f ~/Library/Logs/screensaver_smart.log
 
 ## Uninstall
 
-To remove the guard and all associated files:
+To remove the guard and all associated files, simply **double-click** the `Uninstall.command` file.
 
+Alternatively, via Terminal:
 ```bash
-chmod +x uninstall.sh
-./uninstall.sh
+./Uninstall.command
 ```
 
 ## Configuration
