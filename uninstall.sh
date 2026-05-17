@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Configuration
+cd "$(dirname "$0")"
 APP_NAME="SmartScreensaverGuard"
 INSTALL_DIR="$HOME/Library/Application Support/$APP_NAME"
 PLIST_NAME="com.user.smartscreensaverguard.plist"

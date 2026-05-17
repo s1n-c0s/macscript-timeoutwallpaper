@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Configuration
+cd "$(dirname "$0")"
 APP_NAME="SmartScreensaverGuard"
 SCRIPT_NAME="smart_screensaver_guard.sh"
 INSTALL_DIR="$HOME/Library/Application Support/$APP_NAME"
