@@ -26,8 +26,7 @@ The monitoring script (`smart_screensaver_guard.sh`) operates as a background pr
 
 ## Installation & Management
 ### GUI Management
-The primary way to manage the service is via **`Setup.command`**, which provides a single-screen interface for:
-- **Checking Status**: Verifies if the LaunchAgent is currently loaded.
+The primary way to manage the service is via **`Setup.command`**, which provides a single-screen interface that **automatically shows the current status** (Running/Stopped) and allows for:
 - **Managing Permissions**: Guides the user through granting Accessibility access.
 - **Installing/Uninstalling**: Automates the setup and teardown of the background daemon.
 
