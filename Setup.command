@@ -9,7 +9,7 @@ activate
 set appName to "Smart Screensaver Guard"
 set scriptDir to "$DIR/"
 
-set choices to {"🛠 Check Access (Permissions)", "🚀 Install Service", "🗑 Uninstall Service"}
+set choices to {"🚀 Install Service", "🗑 Uninstall Service"}
 
 repeat
     try
@@ -34,13 +34,7 @@ One-Click Setup:" OK button name "Select" cancel button name "Exit"
     
     set userAction to item 1 of selected
     
-    if userAction contains "Check Access" then
-        display dialog "Please ensure Terminal/Script Editor has 'Accessibility' access in System Settings > Privacy & Security." with title "Access Check" buttons {"Open Settings", "Done"} default button "Done"
-        if button returned of result is "Open Settings" then
-            do shell script "open 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'"
-        end if
-        
-    else if userAction contains "Uninstall" then
+    if userAction contains "Uninstall" then
         try
             do shell script "chmod +x '" & scriptDir & "uninstall.sh'"
             set uninstallLog to do shell script "'" & scriptDir & "uninstall.sh'"
