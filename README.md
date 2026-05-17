@@ -11,7 +11,7 @@ When your screen saver gets stuck consuming CPU/Memory after you return, this sc
 
 WORKING (deep sleep) → IDLE (watching) → RETURNED (detected) → CHECK (kill if stuck) → WORKING
 
-````
+```
 
 ## Features
 
@@ -31,53 +31,39 @@ WORKING (deep sleep) → IDLE (watching) → RETURNED (detected) → CHECK (kill
 
 ## Installation
 
-### 1. Create the Script
+### 1. Easy Install
 
-Copy this to `~/smart_screensaver_guard.sh`:
+Clone this repository and run the installation script:
 
-Make it executable:
-\`\`\`bash
-chmod +x ~/smart_screensaver_guard.sh
-\`\`\`
+```bash
+# Clone the repository
+git clone https://github.com/TNK-T/macscript-timeoutwallpaper.git
+cd macscript-timeoutwallpaper
 
-### 2. Create LaunchAgent
-
-Create `~/Library/LaunchAgents/com.smart.screensaver.plist`:
-
-```
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.smart.screensaver</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/bin/bash</string>
-        <string>/Users/YOUR_USERNAME/smart_screensaver_guard.sh</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-    <key>LimitLoadToSessionType</key>
-    <string>Aqua</string>
-    <key>Nice</key>
-    <integer>10</integer>
-</dict>
-</plist>
+# Run installer
+chmod +x install.sh
+./install.sh
 ```
 
-**Replace `YOUR_USERNAME` with your actual Mac username.**
+### 2. Verification
 
-### 3. Start the Service
-
+Check if it's running:
+```bash
+launchctl list | grep com.user.smartscreensaverguard
 ```
-# Set permissions
-chmod 644 ~/Library/LaunchAgents/com.smart.screensaver.plist
 
-# Start now and enable auto-start on login
-launchctl load ~/Library/LaunchAgents/com.smart.screensaver.plist
+View logs:
+```bash
+tail -f ~/Library/Logs/screensaver_smart.log
+```
+
+## Uninstall
+
+To remove the guard and all associated files:
+
+```bash
+chmod +x uninstall.sh
+./uninstall.sh
 ```
 
 ## Configuration
@@ -88,7 +74,6 @@ Edit these values at the top of the script:
 |----------|---------|-------------|
 | `CPU_THRESHOLD` | `1` | Kill if CPU usage > 1% |
 | `MEM_THRESHOLD_MB` | `3` | Kill if Memory usage > 3MB |
-| `STATE` | `"WORKING"` | Initial state |
 
 **To add Slack/Custom notifications**, modify the `notify()` function.
 
@@ -124,63 +109,16 @@ Edit these values at the top of the script:
 - **Immediate kill** - No grace period, kills instantly if stuck
 - **Kill all** - Finds and kills every stuck instance, not just first
 
-## Verification
-
-Check if it's running:
-\`\`\`bash
-launchctl list | grep com.smart.screensaver
-# Should show: [PID] 0 com.smart.screensaver
-\`\`\`
-
-View logs:
-\`\`\`bash
-tail -f ~/Library/Logs/screensaver_smart.log
-\`\`\`
-
-Test notification:
-\`\`\`bash
-osascript -e 'display notification "Test" with title "Screen Saver Guard"'
-\`\`\`
-
 ## Troubleshooting
 
 ### Not receiving notifications?
 Go to **System Settings → Notifications → Script Editor** and enable "Allow Notifications"
 
-### "Load failed: 5" error?
-```bash
-launchctl remove com.smart.screensaver
-launchctl load ~/Library/LaunchAgents/com.smart.screensaver.plist
-````
-
-### Status 126 (permission denied)?
-
-```bash
-chmod +x ~/smart_screensaver_guard.sh
-```
-
 ### Check current state:
-
 ```bash
 tail -20 ~/Library/Logs/screensaver_smart.log
-```
-
-## Uninstall
-
-```bash
-# Stop service
-launchctl unload ~/Library/LaunchAgents/com.smart.screensaver.plist
-
-# Remove files
-rm ~/Library/LaunchAgents/com.smart.screensaver.plist
-rm ~/smart_screensaver_guard.sh
-rm ~/Library/Logs/screensaver_smart.log
-
-# Remove temp files
-rm -f /tmp/smart_screensaver_guard.lock
 ```
 
 ## License
 
 MIT - Free to use and modify.
-
